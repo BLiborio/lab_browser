@@ -1,4 +1,6 @@
 import java.awt.Dimension;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -250,6 +252,41 @@ public class BrowserView {
         result.setOnAction(handler);
         return result;
     }
+    
+    private Button makeButton (String property, String handler) {
+        final String IMAGEFILE_SUFFIXES = 
+            String.format(".*\\.(%s)", String.join("|", ImageIO.getReaderFileSuffixes()));
+
+        Button result = new Button();
+        String label = myResources.getString(property);
+        if (label.matches(IMAGEFILE_SUFFIXES)) {
+            result.setGraphic(new ImageView(
+                new Image(getClass().getResourceAsStream(DEFAULT_RESOURCE_PACKAGE + label))));
+        } else {
+            result.setText(label);
+        }
+        try{
+        		Method method = this.getClass().getMethod(handler);	
+        		try{
+        		result.setOnAction((EventHandler<ActionEvent>) method.invoke(this));
+        		}
+        		catch (IllegalAccessException e) {
+        			showError("Unable to create button due to faulty method string.");
+				} catch (InvocationTargetException e) {
+					showError("Unable to create button due to faulty method string.");
+				}
+        }
+        catch (SecurityException e){
+        		showError("Unable to create button due to faulty method string.");
+        		result = null;
+        }
+        catch (NoSuchMethodException e){
+        	  showError("Unable to create button due to faulty method string.");
+        	  result = null;
+        }
+        return result;
+    }
+    
 
     // make text field for input
     private TextField makeInputField (int width, EventHandler<ActionEvent> handler) {
